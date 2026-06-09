@@ -1,0 +1,11 @@
+server/.venv/
+__pycache__/
+*.pyc
+.env
+.env.local
+.env*.local
+server/data/contracts/*
+!server/data/contracts/.gitignore
+.vercel
+.DS_Store
+.claude/

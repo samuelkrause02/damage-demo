@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Rückgabeprotokoll – Fahrzeugübergabe</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #eef1f5;
+      color: #1a1a2e;
+      max-width: 520px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+      color: white;
+      padding: 22px 18px 18px;
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+    .header-logo {
+      width: 40px; height: 40px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+    .header p  { font-size: 12px; color: #94a3b8; margin-left: 52px; }
+
+    .protocol-mode {
+      display: flex;
+      gap: 8px;
+      padding: 12px 12px 0;
+    }
+    .protocol-mode button {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #f8fafc;
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .protocol-mode button.active {
+      background: #1e3a5f;
+      color: white;
+      border-color: #1e3a5f;
+    }
+    .contract-actions {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 8px;
+    }
+    .btn-inline {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1e3a5f;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .field.hidden { display: none; }
+
+    .card {
+      background: white;
+      margin: 12px 12px 0;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+      padding: 14px 16px 0;
+    }
+
+    .form-grid {
+      padding: 12px 16px 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field.full { grid-column: 1 / -1; }
+    .field label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .field input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #1a1a2e;
+      background: #f8fafc;
+      transition: border-color 0.15s;
+    }
+    .field input:focus {
+      outline: none;
+      border-color: #2563eb;
+      background: white;
+    }
+
+    .view-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 12px 12px 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .view-tabs::-webkit-scrollbar { display: none; }
+    .view-tab {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      background: #f8fafc;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .view-tab.active {
+      background: #1e3a5f;
+      color: white;
+      border-color: #1e3a5f;
+    }
+    .view-tab .count {
+      display: inline-block;
+      min-width: 16px;
+      height: 16px;
+      line-height: 16px;
+      text-align: center;
+      border-radius: 8px;
+      font-size: 10px;
+      margin-left: 4px;
+      background: rgba(0,0,0,0.15);
+    }
+    .view-tab.active .count { background: rgba(255,255,255,0.25); }
+
+    .svg-wrap {
+      padding: 16px 12px 20px;
+      text-align: center;
+      background: #fff;
+      border-top: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .svg-hint {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+    .car-view { display: none; }
+    .car-view.active { display: block; }
+    .car-view svg {
+      width: 100%;
+      max-width: 200px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      cursor: crosshair;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      background: #fff;
+    }
+    .car-view[data-view="top"] svg,
+    .car-view[data-view="front"] svg,
+    .car-view[data-view="rear"] svg {
+      max-width: min(100%, 340px);
+    }
+    .car-view[data-view="driver"] svg,
+    .car-view[data-view="passenger"] svg {
+      max-width: 320px;
+    }
+
+    .damages-section { padding: 14px 16px 16px; }
+    .damages-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .damages-header h2 { font-size: 14px; font-weight: 700; }
+    .badge {
+      background: #dc2626;
+      color: white;
+      border-radius: 12px;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .badge-sub {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .damage-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      margin: 10px 0 6px;
+    }
+    .damage-group-title:first-child { margin-top: 0; }
+    .interior-actions {
+      margin-bottom: 10px;
+    }
+    .interior-actions .btn-inline { width: 100%; }
+    .modal select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #f8fafc;
+      color: #1a1a2e;
+    }
+    .modal select:focus { outline: none; border-color: #2563eb; }
+    .modal-field.hidden { display: none; }
+    .empty-state {
+      text-align: center;
+      padding: 24px 12px;
+      color: #94a3b8;
+      font-size: 13px;
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1px dashed #cbd5e1;
+    }
+    .damage-item {
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 8px;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .damage-item:hover { background: #f1f5f9; }
+    .damage-item.readonly { cursor: default; }
+    .damage-item.readonly:hover { background: #f8fafc; }
+    .damage-num {
+      min-width: 26px; height: 26px;
+      background: #dc2626;
+      color: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+    }
+    .damage-num.known { background: #64748b; }
+    .damage-content { flex: 1; min-width: 0; }
+    .damage-meta {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 600;
+      margin-bottom: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .damage-desc { font-size: 14px; line-height: 1.4; margin-bottom: 6px; }
+    .damage-photo {
+      width: 88px; height: 66px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+    .damage-nophoto { font-size: 11px; color: #94a3b8; }
+    .damage-del {
+      background: none; border: none;
+      color: #cbd5e1; cursor: pointer;
+      font-size: 20px; padding: 0;
+    }
+    .damage-del:hover { color: #dc2626; }
+
+    .actions {
+      padding: 0 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .btn-primary {
+      background: #1e3a5f;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      font-family: inherit;
+    }
+    .btn-primary:active { background: #0f172a; }
+    .btn-secondary {
+      background: white;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 14px;
+      cursor: pointer;
+      width: 100%;
+      font-family: inherit;
+    }
+    .api-status {
+      font-size: 11px;
+      color: #94a3b8;
+      text-align: center;
+      margin-top: 4px;
+    }
+    .api-status.ok { color: #059669; }
+    .api-status.warn { color: #d97706; }
+
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,0.5);
+      display: flex; align-items: flex-end;
+      justify-content: center; z-index: 100;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: white;
+      border-radius: 20px 20px 0 0;
+      padding: 20px 16px 32px;
+      width: 100%; max-width: 520px;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+    }
+    .overlay.open .modal { transform: translateY(0); }
+    .modal-handle {
+      width: 36px; height: 4px;
+      background: #e2e8f0; border-radius: 2px;
+      margin: -6px auto 16px;
+    }
+    .modal h2 { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .modal-view-tag {
+      font-size: 12px;
+      color: #2563eb;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+    .modal label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 6px;
+      margin-top: 12px;
+    }
+    .modal textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: none;
+      height: 76px;
+    }
+    .modal textarea:focus { outline: none; border-color: #2563eb; }
+    .photo-label {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 500;
+    }
+    #photo-preview {
+      width: 100%; max-height: 140px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-top: 8px;
+      display: none;
+      border: 1px solid #e2e8f0;
+    }
+    .modal-actions { display: flex; gap: 8px; margin-top: 18px; }
+    .modal-actions button {
+      flex: 1; padding: 13px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      border: none;
+    }
+    .btn-cancel { background: #f1f5f9; color: #475569; }
+    .btn-save   { background: #2563eb; color: white; }
+    .btn-photo-remove {
+      display: none;
+      margin-top: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: #dc2626;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0f172a;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      z-index: 200;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+      max-width: 90%;
+      text-align: center;
+    }
+    .toast.show { opacity: 1; }
+
+    @media print {
+      body { background: white; max-width: 100%; }
+      .actions, .overlay, .damage-del, .view-tabs, .svg-hint { display: none !important; }
+      .card { box-shadow: none; border: 1px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-brand">
+    <div class="header-logo">🚐</div>
+    <h1 id="page-title">Rückgabeprotokoll</h1>
+  </div>
+  <p>Digitale Fahrzeugübergabe &amp; Schadensdokumentation</p>
+</div>
+
+<div class="protocol-mode">
+  <button type="button" data-mode="pickup" onclick="setProtocolMode('pickup')">Übergabe</button>
+  <button type="button" data-mode="return" class="active" onclick="setProtocolMode('return')">Rückgabe</button>
+</div>
+
+<div class="card">
+  <div class="card-title">Vertragsdaten</div>
+  <div class="form-grid">
+    <div class="field">
+      <label for="kennzeichen">Kennzeichen</label>
+      <input type="text" id="kennzeichen" placeholder="ZH 123 456" />
+    </div>
+    <div class="field">
+      <label for="datum" id="datum-label">Rückgabedatum</label>
+      <input type="date" id="datum" />
+    </div>
+    <div class="field full">
+      <label for="kunde">Kunde</label>
+      <input type="text" id="kunde" placeholder="Name des Kunden" />
+    </div>
+    <div class="field full">
+      <label for="fahrzeug">Fahrzeugmodell</label>
+      <input type="text" id="fahrzeug" placeholder="z.B. VW Transporter T6" />
+    </div>
+    <div class="field">
+      <label for="vertragsnummer">Vertragsnummer</label>
+      <input type="text" id="vertragsnummer" placeholder="1099322024" />
+    </div>
+    <div class="field">
+      <label for="station">Station</label>
+      <input type="text" id="station" placeholder="Zürich" />
+    </div>
+    <div class="field">
+      <label for="km_abholung">KM Abholung</label>
+      <input type="text" id="km_abholung" placeholder="12 419 KM" />
+    </div>
+    <div class="field" id="field-km-rueckgabe">
+      <label for="km_rueckgabe">KM Rückgabe</label>
+      <input type="text" id="km_rueckgabe" placeholder="12 767 KM" />
+    </div>
+    <div class="contract-actions" id="contract-actions">
+      <button type="button" class="btn-inline" id="btn-load-contract" onclick="loadContract()">Vertrag laden</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Schaden markieren</div>
+  <div class="view-tabs" id="view-tabs"></div>
+  <div class="svg-wrap">
+    <div class="svg-hint">Tippen Sie auf die Fahrzeugansicht, um einen Schaden zu markieren</div>
+    <div id="car-views"></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="damages-section">
+    <div class="damages-header">
+      <h2>Dokumentierte Schäden</h2>
+      <span class="badge" id="badge">0</span>
+    </div>
+    <div class="interior-actions">
+      <button type="button" class="btn-inline" onclick="openModalForInterior()">+ Innenraum-Schaden</button>
+    </div>
+    <div id="damage-list">
+      <div class="empty-state">Noch keine Schäden markiert.<br>Wählen Sie eine Ansicht und tippen Sie auf das Fahrzeug.</div>
+    </div>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn-primary" onclick="downloadPdf()">PDF herunterladen</button>
+  <button class="btn-secondary" id="btn-save-pickup" onclick="savePickup()" style="display:none">Übergabe speichern</button>
+  <button class="btn-secondary" id="btn-save-return" onclick="saveReturn()" style="display:none">Rückgabe speichern</button>
+  <button class="btn-secondary" onclick="showDemoPreview()">PDF Vorschau (Demo)</button>
+  <button class="btn-secondary" onclick="printDoc()">Drucken</button>
+  <button class="btn-secondary" onclick="resetAll()">Zurücksetzen</button>
+  <p id="api-status" class="api-status">Backend wird geprüft…</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <h2 id="modal-title">Schaden #1</h2>
+    <div class="modal-view-tag" id="modal-view"></div>
+    <div class="modal-field hidden" id="modal-interior-field">
+      <label for="modal-interior-area">Bereich *</label>
+      <select id="modal-interior-area">
+        <option value="">Bitte wählen…</option>
+        <option value="dashboard">Armaturenbrett</option>
+        <option value="seat_driver">Fahrersitz</option>
+        <option value="seat_passenger">Beifahrersitz</option>
+        <option value="door_trim">Türverkleidung</option>
+        <option value="cargo">Laderaum</option>
+        <option value="ceiling">Dachhimmel</option>
+        <option value="other">Sonstiges (innen)</option>
+      </select>
+    </div>
+    <label for="modal-desc">Beschreibung *</label>
+    <textarea id="modal-desc" placeholder="z.B. Kratzer 10 cm, Delle, Riss in Stoßstange…"></textarea>
+    <label>Foto (optional)</label>
+    <label class="photo-label" for="photo-input">📷 Foto aufnehmen / auswählen</label>
+    <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)"/>
+    <img id="photo-preview" alt="Vorschau"/>
+    <button type="button" class="btn-photo-remove" id="btn-photo-remove" onclick="removePhoto()">Foto entfernen</button>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="cancelMarker()">Abbrechen</button>
+      <button class="btn-save" onclick="saveMarker()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script src="vehicle-svg.js"></script>
+<script>
+const API_BASE = window.location.origin;
+
+const VIEWS = [
+  { id: 'top',       label: 'Dach' },
+  { id: 'front',     label: 'Front' },
+  { id: 'rear',      label: 'Heck' },
+  { id: 'driver',    label: 'Fahrer' },
+  { id: 'passenger', label: 'Beifahrer' },
+];
+
+const MARKER_BY_VIEW = {
+  top:       { outer: 17, inner: 11, font: 11 },
+  front:     { outer: 26, inner: 17, font: 14 },
+  rear:      { outer: 26, inner: 17, font: 14 },
+  driver:    { outer: 17, inner: 11, font: 11 },
+  passenger: { outer: 17, inner: 11, font: 11 },
+};
+
+const INTERIOR_AREAS = {
+  dashboard: 'Armaturenbrett',
+  seat_driver: 'Fahrersitz',
+  seat_passenger: 'Beifahrersitz',
+  door_trim: 'Türverkleidung',
+  cargo: 'Laderaum',
+  ceiling: 'Dachhimmel',
+  other: 'Sonstiges (innen)',
+};
+
+let damages = [];
+let activeView = 'top';
+let pending = null;
+let pendingPhoto = null;
+let photoCleared = false;
+let editingId = null;
+let modalMode = 'exterior';
+let protocolMode = 'return';
+let backendOk = false;
+let contractsEnabled = true;
+let blobStorageEnabled = false;
+
+const DEMO = {
+  kennzeichen: 'ZH 482 913',
+  kunde: 'Max Müller',
+  fahrzeug: 'VW Transporter T6.1 Kasten',
+  vertragsnummer: '1099322024',
+  station: 'Zürich Flughafen',
+  km_abholung: '12 419 KM',
+  km_rueckgabe: '12 767 KM',
+  kommentar: 'Unfall während der Fahrt? Nein',
+  damages: [
+    { id: 1, number: 1, type: 'known', view: 'top',       x: 110, y: 175, desc: 'Kratzer ca. 8 cm, Frontstoßstange links', photo: null },
+    { id: 2, number: 2, type: 'known', view: 'front',     x: 200, y: 480, desc: 'Steinschlag Nebelscheinwerfer links', photo: null },
+    { id: 3, number: 3, type: 'new',   view: 'top',       x: 600, y: 175, desc: 'Delle ca. 3 cm, Heckstoßstange', photo: null },
+    { id: 4, number: 4, type: 'new',   view: 'rear',      x: 520, y: 320, desc: 'Kratzer 12 cm, Heckflügeltür rechts', photo: null },
+    { id: 5, number: 5, type: 'new',   view: 'passenger', x: 420, y: 160, desc: 'Lackschaden Seitenwand, Länge ca. 15 cm', photo: null },
+    { id: 6, number: 6, type: 'known', view: 'interior', interior_area: 'cargo', x: null, y: null, desc: 'Kratzer Ladefläche ca. 20 cm', photo: null },
+  ],
+};
+
+function interiorAreaLabel(area) {
+  return INTERIOR_AREAS[area] || area || 'Innenraum';
+}
+
+function isInteriorDamage(d) {
+  return d.view === 'interior';
+}
+
+function isExteriorDamage(d) {
+  return !isInteriorDamage(d);
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function nextDamageNumber() {
+  return damages.length ? Math.max(...damages.map(d => d.number)) + 1 : 1;
+}
+
+function defaultDamageType() {
+  return protocolMode === 'pickup' ? 'known' : 'new';
+}
+
+function isDamageEditable(d) {
+  if (d.type === 'known' && protocolMode === 'return') return false;
+  return true;
+}
+
+function canDeleteDamage(d) {
+  if (d.type === 'known' && protocolMode === 'return') return false;
+  return true;
+}
+
+function loadDemoData() {
+  document.getElementById('kennzeichen').value = DEMO.kennzeichen;
+  document.getElementById('datum').valueAsDate = new Date();
+  document.getElementById('kunde').value = DEMO.kunde;
+  document.getElementById('fahrzeug').value = DEMO.fahrzeug;
+  document.getElementById('vertragsnummer').value = DEMO.vertragsnummer;
+  document.getElementById('station').value = DEMO.station;
+  document.getElementById('km_abholung').value = DEMO.km_abholung;
+  document.getElementById('km_rueckgabe').value = DEMO.km_rueckgabe;
+  damages = DEMO.damages.map(d => ({ ...d }));
+  render();
+}
+
+function clearForm() {
+  ['kennzeichen','kunde','fahrzeug','vertragsnummer','station','km_abholung','km_rueckgabe'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('datum').valueAsDate = new Date();
+  damages = [];
+  render();
+}
+
+function initViews() {
+  const tabs = document.getElementById('view-tabs');
+  const container = document.getElementById('car-views');
+  VIEWS.forEach(v => {
+    const btn = document.createElement('button');
+    btn.className = 'view-tab' + (v.id === activeView ? ' active' : '');
+    btn.dataset.view = v.id;
+    btn.innerHTML = `${v.label}<span class="count" id="count-${v.id}">0</span>`;
+    btn.onclick = () => switchView(v.id);
+    tabs.appendChild(btn);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'car-view' + (v.id === activeView ? ' active' : '');
+    wrap.id = `view-${v.id}`;
+    wrap.dataset.view = v.id;
+    wrap.innerHTML = VIEW_SVGS[v.id];
+    container.appendChild(wrap);
+
+    const svg = wrap.querySelector('svg');
+    svg.addEventListener('click', e => onSvgTap(e, v.id, svg));
+    svg.addEventListener('touchend', e => {
+      if (e.target.closest('.damage-marker')) return;
+      e.preventDefault();
+      onSvgTap(e.changedTouches[0], v.id, svg);
+    }, { passive: false });
+  });
+}
+
+function switchView(id) {
+  activeView = id;
+  document.querySelectorAll('.view-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.view === id);
+  });
+  document.querySelectorAll('.car-view').forEach(v => {
+    v.classList.toggle('active', v.id === `view-${id}`);
+  });
+}
+
+function onSvgTap(e, viewId, svg) {
+  if (e.target.closest('.damage-marker')) return;
+  pending = { ...svgCoords(e, svg), view: viewId };
+  pendingPhoto = null;
+  photoCleared = false;
+  openModalForNew();
+}
+
+function svgCoords(e, svg) {
+  const r = svg.getBoundingClientRect();
+  const v = svg.viewBox.baseVal;
+  return {
+    x: (e.clientX - r.left) * (v.width / r.width),
+    y: (e.clientY - r.top) * (v.height / r.height),
+  };
+}
+
+function setModalMode(mode) {
+  modalMode = mode;
+  const interiorField = document.getElementById('modal-interior-field');
+  const areaSelect = document.getElementById('modal-interior-area');
+  if (mode === 'interior') {
+    interiorField.classList.remove('hidden');
+    areaSelect.style.borderColor = '';
+  } else {
+    interiorField.classList.add('hidden');
+    areaSelect.value = '';
+    areaSelect.style.borderColor = '';
+  }
+}
+
+function resetModalForm() {
+  document.getElementById('modal-desc').value = '';
+  document.getElementById('modal-desc').style.borderColor = '';
+  document.getElementById('modal-interior-area').value = '';
+  document.getElementById('modal-interior-area').style.borderColor = '';
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('photo-input').value = '';
+  document.getElementById('btn-photo-remove').style.display = 'none';
+}
+
+function openModalForNew() {
+  editingId = null;
+  resetModalForm();
+  setModalMode('exterior');
+  const v = VIEWS.find(x => x.id === pending.view);
+  document.getElementById('modal-title').textContent = `Schaden #${nextDamageNumber()}`;
+  document.getElementById('modal-view').textContent = v ? v.label : '';
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(() => document.getElementById('modal-desc').focus(), 300);
+}
+
+function openModalForInterior() {
+  editingId = null;
+  pending = null;
+  pendingPhoto = null;
+  photoCleared = false;
+  resetModalForm();
+  setModalMode('interior');
+  document.getElementById('modal-title').textContent = `Schaden #${nextDamageNumber()}`;
+  document.getElementById('modal-view').textContent = 'Innenraum';
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(() => document.getElementById('modal-interior-area').focus(), 300);
+}
+
+function openModalForEdit(damage) {
+  if (!isDamageEditable(damage)) return;
+  editingId = damage.id;
+  pending = null;
+  pendingPhoto = null;
+  photoCleared = false;
+  resetModalForm();
+  setModalMode(isInteriorDamage(damage) ? 'interior' : 'exterior');
+  document.getElementById('modal-desc').value = damage.desc;
+  document.getElementById('modal-title').textContent = `Schaden #${damage.number} bearbeiten`;
+  if (isInteriorDamage(damage)) {
+    document.getElementById('modal-view').textContent = 'Innenraum';
+    document.getElementById('modal-interior-area').value = damage.interior_area || '';
+  } else {
+    const v = VIEWS.find(x => x.id === damage.view);
+    document.getElementById('modal-view').textContent = v ? v.label : '';
+  }
+  if (damage.photo) {
+    const img = document.getElementById('photo-preview');
+    img.src = damage.photo;
+    img.style.display = 'block';
+    document.getElementById('btn-photo-remove').style.display = 'block';
+  }
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(() => document.getElementById('modal-desc').focus(), 300);
+}
+
+function overlayClick(e) {
+  if (e.target === document.getElementById('overlay')) cancelMarker();
+}
+
+function cancelMarker() {
+  pending = null;
+  pendingPhoto = null;
+  photoCleared = false;
+  editingId = null;
+  modalMode = 'exterior';
+  setModalMode('exterior');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function saveMarker() {
+  const desc = document.getElementById('modal-desc').value.trim();
+  const interiorArea = document.getElementById('modal-interior-area').value;
+  if (modalMode === 'interior' && !interiorArea) {
+    document.getElementById('modal-interior-area').style.borderColor = '#dc2626';
+    document.getElementById('modal-interior-area').focus();
+    return;
+  }
+  if (!desc) {
+    document.getElementById('modal-desc').style.borderColor = '#dc2626';
+    document.getElementById('modal-desc').focus();
+    return;
+  }
+  if (editingId) {
+    const d = damages.find(x => x.id === editingId);
+    if (d) {
+      d.desc = desc;
+      if (modalMode === 'interior') {
+        d.interior_area = interiorArea;
+      }
+      if (photoCleared) d.photo = null;
+      else if (pendingPhoto !== null) d.photo = pendingPhoto;
+    }
+  } else if (modalMode === 'interior') {
+    damages.push({
+      id: Date.now(),
+      number: nextDamageNumber(),
+      type: defaultDamageType(),
+      view: 'interior',
+      interior_area: interiorArea,
+      x: null,
+      y: null,
+      desc,
+      photo: pendingPhoto,
+    });
+  } else {
+    damages.push({
+      id: Date.now(),
+      number: nextDamageNumber(),
+      type: defaultDamageType(),
+      x: pending.x,
+      y: pending.y,
+      view: pending.view,
+      desc,
+      photo: pendingPhoto,
+    });
+  }
+  pending = null;
+  pendingPhoto = null;
+  photoCleared = false;
+  editingId = null;
+  modalMode = 'exterior';
+  setModalMode('exterior');
+  document.getElementById('overlay').classList.remove('open');
+  render();
+}
+
+function removePhoto() {
+  pendingPhoto = null;
+  photoCleared = true;
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('photo-input').value = '';
+  document.getElementById('btn-photo-remove').style.display = 'none';
+}
+
+async function handlePhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  let dataUrl;
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    canvas.getContext('2d').drawImage(bitmap, 0, 0);
+    bitmap.close();
+    dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+  } catch {
+    dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = ev => resolve(ev.target.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+  if (blobStorageEnabled && backendOk) {
+    try {
+      const nr = document.getElementById('vertragsnummer').value.trim();
+      const damageNumber = editingId
+        ? (damages.find(d => d.id === editingId)?.number || nextDamageNumber())
+        : nextDamageNumber();
+      const res = await fetch(`${API_BASE}/api/photos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          data_url: dataUrl,
+          vertragsnummer: nr,
+          damage_number: damageNumber,
+        }),
+      });
+      if (res.ok) {
+        const { url } = await res.json();
+        dataUrl = url;
+      }
+    } catch { /* data URL fallback */ }
+  }
+  pendingPhoto = dataUrl;
+  photoCleared = false;
+  const img = document.getElementById('photo-preview');
+  img.src = pendingPhoto;
+  img.style.display = 'block';
+  document.getElementById('btn-photo-remove').style.display = 'block';
+}
+
+function deleteDamage(id) {
+  const d = damages.find(x => x.id === id);
+  if (d && !canDeleteDamage(d)) return;
+  if (editingId === id) cancelMarker();
+  damages = damages.filter(x => x.id !== id);
+  damages.forEach((x, i) => { x.number = i + 1; });
+  render();
+}
+
+function setProtocolMode(mode) {
+  if (mode === protocolMode) return;
+  if (damages.length && !confirm('Schäden gehen verloren. Modus wechseln?')) return;
+  protocolMode = mode;
+  damages = [];
+  updateModeUI();
+  if (mode === 'return') loadDemoData();
+  else clearForm();
+}
+
+function updateModeUI() {
+  document.querySelectorAll('.protocol-mode button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === protocolMode);
+  });
+  const isPickup = protocolMode === 'pickup';
+  document.getElementById('page-title').textContent = isPickup ? 'Übergabeprotokoll' : 'Rückgabeprotokoll';
+  document.getElementById('datum-label').textContent = isPickup ? 'Abholdatum' : 'Rückgabedatum';
+  document.getElementById('field-km-rueckgabe').classList.toggle('hidden', isPickup);
+  const showContracts = contractsEnabled;
+  document.getElementById('btn-save-pickup').style.display = showContracts && isPickup ? 'block' : 'none';
+  document.getElementById('btn-save-return').style.display = showContracts && !isPickup ? 'block' : 'none';
+  document.getElementById('btn-load-contract').style.display = showContracts && !isPickup ? 'inline-block' : 'none';
+  document.getElementById('contract-actions').style.display = showContracts ? '' : 'none';
+  document.title = (isPickup ? 'Übergabe' : 'Rückgabe') + 'protokoll – Fahrzeugübergabe';
+}
+
+function render() {
+  renderAllMarkers();
+  renderList();
+  const known = damages.filter(d => d.type === 'known').length;
+  const neu = damages.filter(d => d.type !== 'known').length;
+  const badge = document.getElementById('badge');
+  if (protocolMode === 'return' && known > 0) {
+    badge.textContent = neu;
+    badge.parentElement.querySelector('.badge-sub')?.remove();
+    const sub = document.createElement('span');
+    sub.className = 'badge-sub';
+    sub.textContent = `${known} alt`;
+    badge.after(sub);
+  } else {
+    badge.textContent = damages.length;
+    badge.parentElement.querySelector('.badge-sub')?.remove();
+  }
+  VIEWS.forEach(v => {
+    const c = damages.filter(d => d.view === v.id).length;
+    const el = document.getElementById(`count-${v.id}`);
+    if (el) el.textContent = c;
+  });
+}
+
+function renderAllMarkers() {
+  VIEWS.forEach(v => {
+    const layer = document.querySelector(`#view-${v.id} .markers-layer`);
+    if (!layer) return;
+    layer.innerHTML = '';
+    damages.filter(d => d.view === v.id).forEach(d => {
+      const isKnown = d.type === 'known';
+      const color = isKnown ? '#64748b' : '#dc2626';
+      const m = MARKER_BY_VIEW[v.id] || MARKER_BY_VIEW.top;
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('damage-marker');
+      g.setAttribute('transform', `translate(${d.x},${d.y})`);
+      if (isDamageEditable(d)) g.style.cursor = 'pointer';
+      g.innerHTML = `
+        <circle r="${m.outer}" fill="${color}" opacity="0.12"/>
+        <circle r="${m.inner}" fill="${color}" stroke="#fff" stroke-width="2"/>
+        <text text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="${m.font}" font-weight="700" font-family="system-ui">${d.number}</text>`;
+      g.addEventListener('click', e => {
+        e.stopPropagation();
+        openModalForEdit(d);
+      });
+      layer.appendChild(g);
+    });
+  });
+}
+
+function damageItemHtml(d) {
+  const v = VIEWS.find(x => x.id === d.view);
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const editable = isDamageEditable(d);
+  const deletable = canDeleteDamage(d);
+  const meta = isInteriorDamage(d)
+    ? `Innenraum · ${interiorAreaLabel(d.interior_area)}${d.type === 'known' ? ' · Abholung' : ''}`
+    : `${v ? v.label : d.view}${d.type === 'known' ? ' · Abholung' : ''}`;
+  return `
+    <div class="damage-item${editable ? '' : ' readonly'}" onclick="openModalForEdit(damages.find(x=>x.id===${d.id}))">
+      <div class="damage-num${d.type === 'known' ? ' known' : ''}">${d.number}</div>
+      <div class="damage-content">
+        <div class="damage-meta">${meta}</div>
+        <div class="damage-desc">${esc(d.desc)}</div>
+        ${d.photo
+          ? `<img class="damage-photo" src="${d.photo}" alt="Foto #${d.number}">`
+          : '<span class="damage-nophoto">Kein Foto</span>'}
+      </div>
+      ${deletable ? `<button class="damage-del" onclick="event.stopPropagation(); deleteDamage(${d.id})" title="Löschen">×</button>` : ''}
+    </div>`;
+}
+
+function renderList() {
+  const list = document.getElementById('damage-list');
+  if (!damages.length) {
+    list.innerHTML = '<div class="empty-state">Noch keine Schäden markiert.<br>Wählen Sie eine Ansicht und tippen Sie auf das Fahrzeug.</div>';
+    return;
+  }
+  const knownExt = damages.filter(d => d.type === 'known' && isExteriorDamage(d));
+  const neuExt = damages.filter(d => d.type !== 'known' && isExteriorDamage(d));
+  const interior = damages.filter(isInteriorDamage);
+  let html = '';
+  if (knownExt.length) {
+    html += '<div class="damage-group-title">Bekannte Schäden (Abholung)</div>';
+    html += knownExt.map(damageItemHtml).join('');
+  }
+  if (neuExt.length) {
+    if (knownExt.length) html += '<div class="damage-group-title">Neue Schäden (Rückgabe)</div>';
+    html += neuExt.map(damageItemHtml).join('');
+  }
+  if (interior.length) {
+    html += '<div class="damage-group-title">Innenraumschäden</div>';
+    html += interior.map(damageItemHtml).join('');
+  }
+  list.innerHTML = html;
+}
+
+async function checkBackend() {
+  const el = document.getElementById('api-status');
+  try {
+    const [healthRes, envRes] = await Promise.all([
+      fetch(`${API_BASE}/api/health`, { signal: AbortSignal.timeout(2000) }),
+      fetch(`${API_BASE}/api/env`, { signal: AbortSignal.timeout(2000) }).catch(() => null),
+    ]);
+    backendOk = healthRes.ok;
+    if (envRes?.ok) {
+      const env = await envRes.json();
+      contractsEnabled = env.contracts !== false;
+      blobStorageEnabled = env.blob === true;
+      updateModeUI();
+    }
+    let status = backendOk ? 'Backend verbunden – PDF-Export aktiv' : 'Backend nicht erreichbar';
+    if (backendOk && blobStorageEnabled) status += ' · Blob Storage aktiv';
+    else if (backendOk && !contractsEnabled) status += ' · Vertragsspeicher nur lokal';
+    el.textContent = status;
+    el.className = 'api-status ' + (backendOk ? 'ok' : 'warn');
+  } catch {
+    backendOk = false;
+    el.textContent = 'Backend offline – Drucken verfügbar';
+    el.className = 'api-status warn';
+  }
+}
+
+function formData() {
+  return {
+    kennzeichen: document.getElementById('kennzeichen').value.trim(),
+    datum: document.getElementById('datum').value,
+    kunde: document.getElementById('kunde').value.trim(),
+    fahrzeug: document.getElementById('fahrzeug').value.trim(),
+    vertragsnummer: document.getElementById('vertragsnummer').value.trim(),
+    station: document.getElementById('station').value.trim(),
+    km_abholung: document.getElementById('km_abholung').value.trim(),
+    km_rueckgabe: document.getElementById('km_rueckgabe').value.trim(),
+    tank_abholung: '8 / 8',
+    tank_rueckgabe: '7 / 8',
+    kommentar: DEMO.kommentar,
+    protocol_mode: protocolMode,
+  };
+}
+
+async function svgToPng(svgEl) {
+  const vb = svgEl.viewBox.baseVal;
+  const scale = 1.5;
+  const w = Math.round(vb.width * scale);
+  const h = Math.round(vb.height * scale);
+  const clone = svgEl.cloneNode(true);
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+
+  for (const imgEl of clone.querySelectorAll('image')) {
+    const href = imgEl.getAttribute('href') || imgEl.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+    if (!href || href.startsWith('data:')) continue;
+    try {
+      const res = await fetch(href);
+      const blob = await res.blob();
+      const dataUrl = await new Promise((ok, no) => {
+        const r = new FileReader();
+        r.onload = () => ok(r.result);
+        r.onerror = no;
+        r.readAsDataURL(blob);
+      });
+      imgEl.setAttribute('href', dataUrl);
+      imgEl.removeAttributeNS('http://www.w3.org/1999/xlink', 'href');
+    } catch { /* keep href */ }
+  }
+
+  return new Promise((resolve, reject) => {
+    const blob = new Blob([new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('SVG export failed')); };
+    img.src = url;
+  });
+}
+
+async function exportCarImages() {
+  const images = {};
+  for (const v of VIEWS) {
+    const svg = document.querySelector(`#view-${v.id} svg`);
+    if (!svg) continue;
+    try {
+      images[v.id] = await svgToPng(svg);
+    } catch { /* skip */ }
+  }
+  return images;
+}
+
+async function buildPayload(extraDamages) {
+  const car_images = await exportCarImages();
+  const list = extraDamages || damages;
+  return {
+    ...formData(),
+    damages: list.map(d => ({
+      number: d.number,
+      desc: d.desc,
+      type: d.type || 'new',
+      photo: d.photo,
+      x: d.x,
+      y: d.y,
+      view: d.view || 'top',
+      interior_area: d.interior_area || null,
+    })),
+    car_images,
+    car_image: car_images.top || null,
+  };
+}
+
+async function requestPdf(payload) {
+  const res = await fetch(`${API_BASE}/api/generate-pdf`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+  return res.blob();
+}
+
+function openPdfBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+async function savePickup() {
+  if (!backendOk) {
+    alert('Backend nicht erreichbar.');
+    return;
+  }
+  const nr = document.getElementById('vertragsnummer').value.trim();
+  if (!nr) {
+    alert('Bitte Vertragsnummer eingeben.');
+    return;
+  }
+  const body = {
+    vertragsnummer: nr,
+    kennzeichen: document.getElementById('kennzeichen').value.trim(),
+    kunde: document.getElementById('kunde').value.trim(),
+    fahrzeug: document.getElementById('fahrzeug').value.trim(),
+    station: document.getElementById('station').value.trim(),
+    datum: document.getElementById('datum').value,
+    km: document.getElementById('km_abholung').value.trim(),
+    tank: '8 / 8',
+    damages: damages.map(d => ({
+      number: d.number,
+      desc: d.desc,
+      type: 'known',
+      photo: d.photo,
+      x: d.x,
+      y: d.y,
+      view: d.view || 'top',
+      interior_area: d.interior_area || null,
+    })),
+  };
+  try {
+    const res = await fetch(`${API_BASE}/api/contracts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+    showToast(`Übergabe gespeichert (${nr})`);
+  } catch (e) {
+    alert('Speichern fehlgeschlagen: ' + e.message);
+  }
+}
+
+async function loadContract() {
+  if (!backendOk) {
+    alert('Backend nicht erreichbar.');
+    return;
+  }
+  const nr = document.getElementById('vertragsnummer').value.trim();
+  if (!nr) {
+    alert('Bitte Vertragsnummer eingeben.');
+    return;
+  }
+  try {
+    const res = await fetch(`${API_BASE}/api/contracts/${encodeURIComponent(nr)}`);
+    if (!res.ok) throw new Error(res.status === 404 ? 'Vertrag nicht gefunden' : await res.text());
+    const data = await res.json();
+    const p = data.pickup;
+    if (!p) throw new Error('Keine Übergabedaten');
+    document.getElementById('kennzeichen').value = p.kennzeichen || '';
+    document.getElementById('kunde').value = p.kunde || '';
+    document.getElementById('fahrzeug').value = p.fahrzeug || '';
+    document.getElementById('station').value = p.station || '';
+    document.getElementById('km_abholung').value = p.km || '';
+    if (p.datum) document.getElementById('datum').value = p.datum;
+    damages = (p.damages || []).map((d, i) => ({
+      id: Date.now() + i,
+      number: d.number,
+      type: 'known',
+      view: d.view || 'top',
+      interior_area: d.interior_area || null,
+      x: d.x,
+      y: d.y,
+      desc: d.desc,
+      photo: d.photo || null,
+    }));
+    render();
+    showToast(`${damages.length} bekannte Schäden geladen`);
+  } catch (e) {
+    alert('Laden fehlgeschlagen: ' + e.message);
+  }
+}
+
+async function downloadPdf() {
+  if (!backendOk) {
+    alert('Backend nicht erreichbar. Starte: cd damage-demo/server && ./run.sh');
+    return;
+  }
+  try {
+    const payload = await buildPayload();
+    const prefix = protocolMode === 'pickup' ? 'uebergabeprotokoll' : 'rueckgabeprotokoll';
+    const blob = await requestPdf(payload);
+    openPdfBlob(blob, `${prefix}_${payload.kennzeichen || 'demo'}.pdf`.replace(/\s+/g, '_'));
+  } catch (e) {
+    alert('PDF fehlgeschlagen: ' + e.message);
+  }
+}
+
+async function showDemoPreview() {
+  if (!backendOk) { alert('Backend offline.'); return; }
+  loadDemoData();
+  try {
+    const payload = await buildPayload();
+    const blob = await requestPdf(payload);
+    openPdfBlob(blob, 'demo_rueckgabeprotokoll.pdf');
+  } catch (e) {
+    alert('Demo-PDF fehlgeschlagen: ' + e.message);
+  }
+}
+
+function printDoc() { window.print(); }
+
+function resetAll() {
+  if (!confirm('Alle Eingaben und Schäden zurücksetzen?')) return;
+  clearForm();
+}
+
+initViews();
+updateModeUI();
+loadDemoData();
+checkBackend();
+</script>
+</body>
+</html>
