@@ -343,19 +343,21 @@ def _damage_line(d: DamageItem) -> str:
     return f"#{d.number}  {d.desc}"
 
 
+VIEW_TO_ZONE = {
+    "top": "Dach",
+    "front": "Front",
+    "rear": "Heck",
+    "driver": "Fahrer",
+    "passenger": "Beifahrer",
+    "interior": "Innenraum",
+}
+
+
 def zone_for_damage(d: DamageItem) -> str:
     view = (d.view or "top").lower()
-    if view == "interior":
-        return "Innenraum"
-    if view == "front":
-        return "Front"
-    if view == "rear":
-        return "Heck"
-    if view == "driver":
-        return "Fahrer"
-    if view == "passenger":
-        return "Beifahrer"
-    if view == "top":
+    if view in VIEW_TO_ZONE:
+        return VIEW_TO_ZONE[view]
+    if d.x is not None and d.y is not None:
         return zone_from_coords(d.x, d.y)
     return "Sonstiges"
 
@@ -600,22 +602,26 @@ def _render_zone_sketch(
 
     assets_dir = _vehicle_assets_dir()
     path = assets_dir / asset if assets_dir else None
-    from_client = False
     if path and path.exists():
         im = Image.open(path).convert("RGBA")
     elif car_images and ZONE_SKETCH_KEY.get(zone) in car_images:
         im = _decode_sketch_image(car_images[ZONE_SKETCH_KEY[zone]])
         if im is None:
             return None
-        from_client = True
     else:
         return None
     iw, ih = im.size
     vb_w, vb_h = VIEWBOX.get(zone, (iw, ih))
     sx, sy = iw / vb_w, ih / vb_h
 
-    zone_damages = [d for d in damages if zone_for_damage(d) == zone]
-    if zone_damages and not from_client:
+    sketch_view = ZONE_SKETCH_KEY.get(zone)
+    zone_damages = [
+        d
+        for d in damages
+        if zone_for_damage(d) == zone
+        and (d.view or "top").lower() == (sketch_view or "").lower()
+    ]
+    if zone_damages:
         draw = ImageDraw.Draw(im)
         r = max(13, min(iw, ih) // 26)
         r = int(r * ZONE_MARKER_SCALE.get(zone, 1.0))

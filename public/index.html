@@ -640,9 +640,9 @@ const DEMO = {
   km_rueckgabe: '12 767 KM',
   kommentar: 'Unfall während der Fahrt? Nein',
   damages: [
-    { id: 1, number: 1, type: 'known', view: 'top',       x: 110, y: 175, desc: 'Kratzer ca. 8 cm, Frontstoßstange links', photo: null },
+    { id: 1, number: 1, type: 'known', view: 'front',     x: 150, y: 530, desc: 'Kratzer ca. 8 cm, Frontstoßstange links', photo: null },
     { id: 2, number: 2, type: 'known', view: 'front',     x: 200, y: 480, desc: 'Steinschlag Nebelscheinwerfer links', photo: null },
-    { id: 3, number: 3, type: 'new',   view: 'top',       x: 600, y: 175, desc: 'Delle ca. 3 cm, Heckstoßstange', photo: null },
+    { id: 3, number: 3, type: 'new',   view: 'rear',      x: 360, y: 510, desc: 'Delle ca. 3 cm, Heckstoßstange', photo: null },
     { id: 4, number: 4, type: 'new',   view: 'rear',      x: 520, y: 320, desc: 'Kratzer 12 cm, Heckflügeltür rechts', photo: null },
     { id: 5, number: 5, type: 'new',   view: 'passenger', x: 420, y: 160, desc: 'Lackschaden Seitenwand, Länge ca. 15 cm', photo: null },
     { id: 6, number: 6, type: 'known', view: 'interior', interior_area: 'cargo', x: null, y: null, desc: 'Kratzer Ladefläche ca. 20 cm', photo: null },
@@ -1324,7 +1324,7 @@ async function loadContract() {
 
 async function downloadPdf() {
   if (!backendOk) {
-    alert('Backend nicht erreichbar. Starte: cd damage-demo/server && ./run.sh');
+    alert('Backend nicht erreichbar. Starte: cd server && ./run.sh');
     return;
   }
   try {
